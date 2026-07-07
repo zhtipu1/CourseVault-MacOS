@@ -1,0 +1,327 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Course content hierarchy
+   Module accordion → Lesson accordion → Lecture rows (list)
+   All panels start collapsed.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Module (depth-0) ───────────────────────────────────────────────────── */
+.cv-mod {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 4px;
+    background: var(--surface);
+}
+
+/* All children of .cv-mod-hd are <span> — <div> inside <button> is invalid HTML */
+.cv-mod-hd {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    color: var(--text);
+    text-align: left;
+    transition: background .12s;
+}
+.cv-mod-hd:hover { background: rgba(255,255,255,.03); }
+
+.cv-mod-chevron {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-3);
+    flex-shrink: 0;
+    transition: transform .18s;
+}
+
+.cv-mod-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cv-mod-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.cv-mod-count {
+    font-size: 11px;
+    color: var(--text-3);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.cv-mod-bar {
+    display: inline-block;
+    width: 44px;
+    height: 2px;
+    background: var(--surface-3);
+    border-radius: 2px;
+    vertical-align: middle;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.cv-mod-bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width .3s;
+}
+
+/* ── Lesson (depth-1) ───────────────────────────────────────────────────── */
+.cv-les {
+    border-top: 1px solid var(--border);
+}
+
+.cv-les-hd {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px 9px 32px;
+    background: var(--surface-2);
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    color: var(--text-2);
+    text-align: left;
+    transition: background .12s;
+}
+.cv-les-hd:hover { background: var(--surface-3); }
+
+.cv-les-chevron {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-3);
+    flex-shrink: 0;
+    transition: transform .18s;
+}
+
+.cv-les-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cv-les-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.cv-les-count {
+    font-size: 11px;
+    color: var(--text-3);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Lecture rows ───────────────────────────────────────────────────────── */
+.cv-lec-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.cv-lec {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px 9px 42px;
+    border-top: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .1s;
+    min-width: 0;
+}
+.cv-lec:hover { background: var(--surface-2); }
+
+/* In-progress accent strip on the left edge */
+.cv-lec::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: transparent;
+}
+.cv-lec.lec-progress::before { background: var(--accent); }
+.cv-lec.lec-done { opacity: .5; }
+.cv-lec.lec-done:hover { opacity: .75; }
+
+.cv-lec-num {
+    font-size: 11px;
+    color: var(--text-3);
+    min-width: 24px;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.cv-lec-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+}
+.cv-lec.lec-done .cv-lec-title { color: var(--text-2); }
+
+.cv-lec-resume {
+    font-size: 11px;
+    color: var(--accent);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* File ext — hidden until row hover (except remux lessons which are always visible) */
+.cv-lec-ext {
+    font-size: 9.5px;
+    font-family: monospace;
+    text-transform: uppercase;
+    color: var(--text-3);
+    background: var(--surface-3);
+    border-radius: 3px;
+    padding: 1px 5px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity .12s;
+}
+.cv-lec:hover .cv-lec-ext { opacity: 1; }
+.cv-lec-ext.ext-remux {
+    color: var(--amber);
+    background: var(--amber-dim);
+    opacity: 1;          /* always visible — signals the lesson needs conversion */
+}
+
+.cv-lec-dur {
+    font-size: 11.5px;
+    color: var(--text-3);
+    min-width: 38px;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.cv-lec-check {
+    color: var(--green);
+    opacity: .8;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Watch-progress strip at bottom of row */
+.cv-lec-strip {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--border);
+}
+.cv-lec-strip-fill {
+    height: 100%;
+    background: var(--accent);
+}
+
+/* ── Content toolbar ─────────────────────────────────────────────────────── */
+.content-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.content-toolbar-left {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+}
+.content-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.expand-toggle-btn {
+    font-size: 11.5px;
+    color: var(--text-3);
+    background: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-family: var(--font);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    transition: color .12s, background .12s, border-color .12s;
+}
+.expand-toggle-btn:hover {
+    color: var(--text);
+    background: var(--surface-2);
+    border-color: var(--border-2);
+}
+
+/* ── Sidebar subsection header ───────────────────────────────────────────── */
+.sidebar-subsection-hd { padding:7px 14px 4px; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--text-3); background:var(--surface); border-bottom:1px solid var(--border); opacity:.75; }
+
+/* ── Manage page ─────────────────────────────────────────────────────────── */
+.manage-hint { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-3); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:20px; }
+.manage-section { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px; overflow:hidden; }
+.manage-section[data-depth="1"] { background:var(--surface-2); margin:0; border-radius:0; border-left:none; border-right:none; border-top:1px solid var(--border); }
+.manage-section[data-depth="2"] { background:var(--bg); }
+.manage-section-hd { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); }
+.manage-drag-handle { color:var(--text-3); cursor:grab; font-size:14px; flex-shrink:0; user-select:none; }
+.manage-section-title { flex:1; font-size:13px; font-weight:600; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.manage-section-count { font-size:11px; color:var(--text-3); white-space:nowrap; flex-shrink:0; }
+.manage-actions { display:flex; align-items:center; gap:2px; flex-shrink:0; }
+.manage-btn { background:transparent; border:none; color:var(--text-3); display:inline-flex; align-items:center; gap:4px; padding:4px 7px; border-radius:5px; font-size:11px; font-family:var(--font); cursor:pointer; transition:background .12s,color .12s; white-space:nowrap; text-decoration:none; }
+.manage-btn:hover { background:var(--surface-3); color:var(--text); }
+.manage-btn-danger:hover { background:var(--red-dim); color:var(--red); }
+.manage-lesson-list { list-style:none; border-top:1px solid var(--border); }
+.manage-lesson { display:flex; align-items:center; gap:8px; padding:8px 12px 8px 0; border-bottom:1px solid var(--border); transition:background .12s; }
+.manage-lesson:last-child { border-bottom:none; }
+.manage-lesson:hover { background:rgba(255,255,255,.02); }
+.manage-lesson-status { font-size:11px; width:16px; text-align:center; color:var(--text-3); flex-shrink:0; }
+.manage-lesson-status.done { color:var(--green); }
+.manage-lesson-title { flex:1; font-size:12.5px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.manage-lesson-ext   { font-size:10px; color:var(--text-3); font-family:monospace; flex-shrink:0; }
+.manage-lesson-dur   { font-size:11px; color:var(--text-3); min-width:36px; text-align:right; flex-shrink:0; }
+.manage-empty { color:var(--text-3); font-size:13px; padding:32px; text-align:center; background:var(--surface); border:1px dashed var(--border-2); border-radius:var(--radius); }
+.manage-rename-btn { background:transparent; border:none; color:var(--text-3); cursor:pointer; display:inline-flex; align-items:center; padding:4px 6px; border-radius:5px; vertical-align:middle; margin-left:6px; transition:background .15s,color .15s; }
+.manage-rename-btn:hover { background:var(--surface-2); color:var(--text); }
+.manage-prompt-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:200; display:flex; align-items:center; justify-content:center; }
+.manage-prompt-box { background:var(--surface); border:1px solid var(--border-2); border-radius:var(--radius-lg); padding:24px 28px; min-width:320px; max-width:480px; width:90%; }
+.manage-prompt-label { font-size:14px; font-weight:600; color:var(--text); margin-bottom:12px; }
+.manage-prompt-btns { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+
+/* ── Select element ──────────────────────────────────────────────────────── */
+.cv-select { background:var(--surface-2); border:1px solid var(--border-2); border-radius:var(--radius-sm); color:var(--text); padding:7px 28px 7px 10px; font-size:13px; font-family:var(--font); outline:none; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238892a4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; transition:border-color .15s; min-width:220px; }
+.cv-select:focus  { border-color: var(--accent); }
+.cv-select option { background: var(--surface-2); color: var(--text); }
+.cv-select-sm     { padding: 5px 24px 5px 8px; font-size: 12px; min-width: 140px; }

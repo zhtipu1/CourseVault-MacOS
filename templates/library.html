@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Library — CourseVault{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+            <h1 class="page-title">My Library</h1>
+            <p id="stats-bar" class="stats-bar">Loading…</p>
+        </div>
+        <div style="display:flex;gap:8px;padding-top:4px;">
+            <button id="add-course-btn" class="btn btn-primary" onclick="openImportModal()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Course
+            </button>
+            <button id="rescan-btn" class="btn btn-secondary">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+                </svg>
+                Rescan
+            </button>
+        </div>
+    </div>
+
+    <div class="library-toolbar">
+        <div class="filter-tabs" role="tablist" aria-label="Filter courses">
+            <button class="filter-tab active" data-filter="all"          role="tab">All</button>
+            <button class="filter-tab"         data-filter="in-progress" role="tab">In Progress</button>
+            <button class="filter-tab"         data-filter="completed"   role="tab">Completed</button>
+            <button class="filter-tab"         data-filter="favorites"   role="tab">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                Favorites
+            </button>
+        </div>
+        <div class="search-wrap">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="search" id="search-input" class="search-input"
+                   placeholder="Search courses…" autocomplete="off" aria-label="Search courses"/>
+        </div>
+    </div>
+</div>
+
+<div style="padding:24px 28px 48px;">
+    <div id="course-grid" class="course-grid" aria-label="Course list"></div>
+    <div id="empty-state" class="empty-state" style="display:none;">
+        <div class="empty-state-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+                <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+            </svg>
+        </div>
+        <p class="empty-state-title">No courses yet</p>
+        <p class="empty-state-body">
+            Use <strong>Add Course</strong> to import a course folder, or add folders in
+            <a href="/settings" style="color:var(--accent)">Settings</a> and click <strong>Rescan</strong>.
+        </p>
+        <div style="display:flex;gap:8px;margin-top:4px;justify-content:center;">
+            <button class="btn btn-primary" onclick="openImportModal()">Add Course</button>
+            <a href="/settings" class="btn btn-secondary">Open Settings</a>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Add Course Modal ══════════════════════════════════════════════════════ -->
+<div id="ac-modal" class="cv-modal-backdrop" style="display:none;"
+     onclick="if(event.target===this)closeAddCourse()">
+
+    <!-- PAGE: mode picker ─────────────────────────────────────────────────── -->
+    <div id="ac-mode" class="cv-modal ac-modal-sm">
+        <div class="cv-modal-header">
+            <h2 class="cv-modal-title">Add Course</h2>
+            <button class="cv-modal-close" onclick="closeAddCourse()">✕</button>
+        </div>
+        <div class="cv-modal-body">
+            <p style="font-size:13px;color:var(--text-2);margin-bottom:14px;">
+                Choose how you want to add a course to your library.
+            </p>
+            <div class="ac-mode-cards">
+                <button class="ac-mode-card" onclick="acShowPage('import')">
+                    <div class="ac-mode-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+                        </svg>
+                    </div>
+                    <div class="ac-mode-body">
+                        <div class="ac-mode-title">Import Folder</div>
+                        <div class="ac-mode-desc">Select a folder containing video files. CourseVault auto-detects the structure.</div>
+                    </div>
+                    <svg class="ac-mode-chev" width="15" height="15" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </button>
+                <button class="ac-mode-card" onclick="acShowPage('manual')">
+                    <div class="ac-mode-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </div>
+                    <div class="ac-mode-body">
+                        <div class="ac-mode-title">Build Manually</div>
+                        <div class="ac-mode-desc">Create modules and add video files one by one. Full control over course structure.</div>
+                    </div>
+                    <svg class="ac-mode-chev" width="15" height="15" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE: import folder ───────────────────────────────────────────────── -->
+    <div id="ac-import" class="cv-modal ac-modal-sm" style="display:none;">
+        <div class="cv-modal-header">
+            <button class="ac-back-btn" onclick="acShowPage('mode')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                Back
+            </button>
+            <h2 class="cv-modal-title">Import Folder</h2>
+            <button class="cv-modal-close" onclick="closeAddCourse()">✕</button>
+        </div>
+        <div class="cv-modal-body">
+            <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5;">
+                Select the folder that <em>is</em> your course: the one that directly
+                contains lesson videos or section sub-folders.
+            </p>
+            <label class="ac-label">Course Folder</label>
+            <div style="display:flex;gap:8px;margin-bottom:6px;">
+                <input id="import-path" type="text" class="cv-input"
+                       style="flex:1;" placeholder="Paste or browse to the course root folder"
+                       onkeydown="if(event.key==='Enter')doImportCourse()"/>
+                <button id="browse-btn" onclick="browseFolderForImport()"
+                        class="btn btn-secondary" style="white-space:nowrap;">Browse…</button>
+            </div>
+            <div id="import-error" class="ac-error" style="display:none;margin-top:10px;"></div>
+        </div>
+        <div class="cv-modal-footer">
+            <button onclick="acShowPage('mode')" class="btn btn-ghost">Back</button>
+            <button id="import-btn" onclick="doImportCourse()" class="btn btn-primary">
+                Import Course
+            </button>
+        </div>
+    </div>
+
+    <!-- PAGE: manual builder ─────────────────────────────────────────────── -->
+    <div id="ac-manual" class="cv-modal ac-modal-lg" style="display:none;">
+        <div class="cv-modal-header">
+            <button class="ac-back-btn" onclick="acShowPage('mode')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                Back
+            </button>
+            <h2 class="cv-modal-title">Build Course</h2>
+            <button class="cv-modal-close" onclick="closeAddCourse()">✕</button>
+        </div>
+
+        <div class="cv-modal-body ac-builder-body">
+
+            <!-- Course info fields -->
+            <div class="ac-section">
+                <label class="ac-label">
+                    Course Title
+                    <span class="ac-label-req">*</span>
+                </label>
+                <input id="ac-title" type="text" class="cv-input" style="width:100%;box-sizing:border-box;"
+                       placeholder="Course title (auto-detected if left blank)"/>
+
+                <label class="ac-label" style="margin-top:12px;">
+                    Description
+                    <span class="ac-label-opt">(optional)</span>
+                </label>
+                <textarea id="ac-desc" class="cv-input ac-textarea"
+                          placeholder="Brief description of this course…" rows="2"></textarea>
+            </div>
+
+            <!-- Structure builder -->
+            <div class="ac-section ac-section-structure">
+                <div class="ac-structure-hd">
+                    <span class="ac-structure-label">Content Structure</span>
+                    <button class="ac-add-mod-btn" onclick="acAddModule()">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Add Module
+                    </button>
+                </div>
+                <div id="ac-modules" class="ac-modules-list"></div>
+                <div id="ac-no-modules" class="ac-empty-hint">
+                    Click <strong>Add Module</strong> to start building your course structure.
+                </div>
+            </div>
+
+            <div id="ac-builder-error" class="ac-error" style="display:none;margin-top:4px;"></div>
+        </div>
+
+        <div class="cv-modal-footer">
+            <button onclick="acShowPage('mode')" class="btn btn-ghost">Cancel</button>
+            <button id="ac-create-btn" onclick="doCreateManual()" class="btn btn-primary">
+                Create Course
+            </button>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/library.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Player — CourseVault</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+
+    <link rel="stylesheet" href="/static/css/player.css"/>
+</head>
+<body>
+
+<div class="player-shell">
+
+    <!-- ══ MAIN: topbar + video + controls ════════════════════════════════════ -->
+    <div class="player-main">
+
+        <!-- Topbar -->
+        <div class="player-topbar">
+            <a id="back-link" href="/library" class="player-back">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                <span>Back</span>
+            </a>
+
+            <span class="topbar-divider" aria-hidden="true">·</span>
+            <span id="topbar-lesson-title" class="topbar-lesson-title">Loading…</span>
+
+            <button class="topbar-shortcuts-btn" onclick="player.toggleShortcutsPanel()"
+                    title="Keyboard shortcuts (Shift+/)">
+                ?
+            </button>
+        </div>
+
+        <!-- Video + controls wrapper -->
+        <div class="video-wrap" id="video-wrap">
+
+            <!-- The video element -->
+            <video id="video" preload="metadata" playsinline>
+                <track id="subtitle-track" kind="subtitles" srclang="en" label="English"/>
+            </video>
+
+            <!-- Transparent click area (above video, below controls overlay) -->
+            <div class="video-click-area" onclick="player.handleVideoClick(event)"></div>
+
+            <!-- Play/pause flash indicator -->
+            <div class="play-flash" id="play-flash" aria-hidden="true"></div>
+
+            <!-- MKV / needs-conversion overlay -->
+            <div class="mkv-overlay" id="mkv-overlay" style="display:none" role="status">
+                <div class="mkv-box">
+                    <div id="mkv-spinner-wrap"><div class="mkv-spinner"></div></div>
+                    <div id="mkv-icon-wrap" style="display:none">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+                             stroke="var(--text-3)" stroke-width="1.4" aria-hidden="true">
+                            <rect x="2" y="2" width="20" height="20" rx="4"/>
+                            <path d="M7 8h.01M7 12h10M7 16h6"/>
+                        </svg>
+                    </div>
+                    <p class="mkv-title" id="mkv-title">Video conversion required</p>
+                    <p class="mkv-pct"   id="mkv-pct"></p>
+                    <p class="mkv-body"  id="mkv-body">
+                        This video format requires a one-time FFmpeg conversion before playback.<br>
+                        Original file is not modified.
+                    </p>
+                    <div class="mkv-btn-row">
+                        <button id="mkv-convert-btn" class="mkv-convert-btn"
+                                onclick="player.startRemux()" style="display:none">
+                            Convert Now
+                        </button>
+                        <button id="mkv-external-btn" class="mkv-external-btn"
+                                onclick="player.openExternally()" style="display:none"
+                                title="Open source file in VLC, MPV, or your system default player">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            Open Externally
+                        </button>
+                    </div>
+                    <p id="mkv-error" class="mkv-error" style="display:none"></p>
+                    <p class="mkv-hint" id="mkv-hint"></p>
+                </div>
+            </div>
+
+            <!-- Course complete celebration overlay -->
+            <div id="congrats-overlay" class="congrats-overlay" style="display:none" aria-modal="true" role="dialog">
+                <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+                <div class="congrats-box">
+                    <div class="congrats-trophy">🏆</div>
+                    <h2 class="congrats-title">Course Complete!</h2>
+                    <p class="congrats-subtitle" id="congrats-course-name"></p>
+                    <p class="congrats-msg">You've watched every lesson in this course. Excellent work!</p>
+                    <div class="congrats-stats" id="congrats-stats"></div>
+                    <div class="congrats-actions">
+                        <a id="congrats-dashboard-btn" href="/library" class="btn congrats-btn-primary">
+                            Back to Library
+                        </a>
+                        <button class="btn congrats-btn-secondary" onclick="player.dismissCongrats()">
+                            Keep Watching
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next video floating button -->
+            <a id="next-video-btn" class="next-video-btn" href="#" style="display:none"
+               title="Next lesson (N)">
+                Next Video
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                    <line x1="19" y1="3" x2="19" y2="21"/>
+                </svg>
+            </a>
+
+            <!-- ── Controls overlay ─────────────────────────────────────────── -->
+            <div class="controls" id="controls" role="group" aria-label="Video controls">
+
+                <!-- Seek bar row -->
+                <div class="seek-row">
+                    <span class="seek-time" id="seek-time-current">0:00</span>
+
+                    <div class="seek-track" id="seek-track" role="slider"
+                         aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div class="seek-buffered" id="seek-buffered"></div>
+                        <div class="seek-fill"     id="seek-fill"     style="width:0%"></div>
+                        <div class="seek-thumb"    id="seek-thumb"    style="left:0%"></div>
+                    </div>
+
+                    <span class="seek-time" id="seek-time-total">0:00</span>
+                </div>
+
+                <!-- Buttons row -->
+                <div class="ctrl-row">
+
+                    <!-- LEFT: skip back, play, skip fwd, volume, time -->
+                    <div class="ctrl-left">
+
+                        <!-- Skip back -->
+                        <button class="ctrl-btn" onclick="player.skip(-player.skipSecs || -10)"
+                                title="Skip back (←)" aria-label="Skip back">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path d="M11 17l-5-5 5-5"/>
+                                <path d="M18 17l-5-5 5-5"/>
+                            </svg>
+                            <span class="skip-label" id="skip-back-n">10</span>
+                        </button>
+
+                        <!-- Play / Pause -->
+                        <button class="ctrl-btn play-btn" id="play-pause-btn"
+                                onclick="player.togglePlay()" title="Play / Pause (Space)"
+                                aria-label="Play/Pause">
+                            <svg id="play-icon" width="20" height="20" viewBox="0 0 24 24"
+                                 fill="currentColor" aria-hidden="true">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            <svg id="pause-icon" width="20" height="20" viewBox="0 0 24 24"
+                                 fill="currentColor" aria-hidden="true" style="display:none">
+                                <rect x="6" y="4" width="4" height="16"/>
+                                <rect x="14" y="4" width="4" height="16"/>
+                            </svg>
+                        </button>
+
+                        <!-- Skip forward -->
+                        <button class="ctrl-btn" onclick="player.skip(player.skipSecs || 10)"
+                                title="Skip forward (→)" aria-label="Skip forward">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path d="M13 17l5-5-5-5"/>
+                                <path d="M6 17l5-5-5-5"/>
+                            </svg>
+                            <span class="skip-label" id="skip-fwd-n">10</span>
+                        </button>
+
+                        <!-- Volume -->
+                        <div class="vol-group">
+                            <button class="ctrl-btn" id="mute-btn" onclick="player.toggleMute()"
+                                    title="Mute (M)" aria-label="Toggle mute">
+                                <span id="vol-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                        <path d="M19.07 4.93a10 10 0 010 14.14"/>
+                                        <path d="M15.54 8.46a5 5 0 010 7.07"/>
+                                    </svg>
+                                </span>
+                            </button>
+                            <input type="range" class="vol-range" id="vol-range"
+                                   min="0" max="1" step="0.02" value="0.8"
+                                   aria-label="Volume"/>
+                        </div>
+
+                        <!-- Time display -->
+                        <span class="ctrl-time">
+                            <span id="t-current">0:00</span>
+                            <span style="opacity:.35"> / </span>
+                            <span id="t-total">0:00</span>
+                        </span>
+                    </div>
+
+                    <!-- RIGHT: speed, fullscreen -->
+                    <div class="ctrl-right">
+
+                        <!-- Speed selector -->
+                        <div class="speed-wrap" id="speed-wrap">
+                            <button class="ctrl-btn speed-curr-btn" id="speed-curr-btn"
+                                    onclick="player.toggleSpeedMenu()"
+                                    title="Playback speed" aria-label="Playback speed">
+                                1×
+                            </button>
+                            <div class="speed-menu" id="speed-menu" style="display:none"
+                                 role="menu" aria-label="Playback speed">
+                                {% for rate in [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] %}
+                                <button data-rate="{{ rate }}"
+                                        onclick="player.setSpeed({{ rate }})"
+                                        class="{{ 'active' if rate == 1 else '' }}"
+                                        role="menuitem">
+                                    {{ rate }}×
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Subtitles / CC toggle -->
+                        <button class="ctrl-btn cc-btn" id="cc-btn"
+                                onclick="player.toggleCC()"
+                                title="Subtitles (C)" aria-label="Toggle subtitles"
+                                style="display:none">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <rect x="2" y="5" width="20" height="14" rx="3"/>
+                                <path d="M7 12h4M7 15h2M13 12h4M13 15h2"/>
+                            </svg>
+                        </button>
+
+                        <!-- Fullscreen -->
+                        <button class="ctrl-btn" id="fs-btn" onclick="player.toggleFullscreen()"
+                                title="Fullscreen (F)" aria-label="Toggle fullscreen">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3
+                                         M3 16v3a2 2 0 002 2h3m8 0h3a2 2 0 002-2v-3"/>
+                            </svg>
+                        </button>
+
+                    </div>
+                </div><!-- ctrl-row -->
+            </div><!-- controls -->
+
+        </div><!-- video-wrap -->
+    </div><!-- player-main -->
+
+    <!-- ══ SIDEBAR: course outline / notes / bookmarks ═══════════════════════ -->
+    <aside class="player-sidebar" aria-label="Course content">
+
+        <div class="sidebar-hd">
+            <!-- collapse button always visible -->
+            <button class="sidebar-collapse-btn" id="sidebar-collapse-btn"
+                    onclick="player.toggleSidebar()" title="Collapse sidebar"
+                    aria-label="Toggle sidebar">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" id="sidebar-collapse-icon">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </button>
+            <div class="sidebar-hd-inner">
+                <a id="sidebar-course-link" href="/library" class="sidebar-course-link">
+                    Loading…
+                </a>
+                <div class="sidebar-prog-row">
+                    <div class="sidebar-prog-track">
+                        <div class="sidebar-prog-fill" id="sidebar-prog-fill" style="width:0%"></div>
+                    </div>
+                    <span class="sidebar-prog-pct" id="sidebar-prog-pct">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="sidebar-tabs" role="tablist">
+            <button class="sidebar-tab active" data-tab="outline"
+                    role="tab" aria-selected="true"  onclick="player.switchTab('outline')">Outline</button>
+            <button class="sidebar-tab"         data-tab="notes"
+                    role="tab" aria-selected="false" onclick="player.switchTab('notes')">Notes</button>
+            <button class="sidebar-tab"         data-tab="bookmarks"
+                    role="tab" aria-selected="false" onclick="player.switchTab('bookmarks')">Bookmarks</button>
+        </div>
+
+        <!-- ── Outline panel ─────────────────────────────────────────────── -->
+        <div class="sidebar-panel" id="panel-outline" role="tabpanel">
+            <div class="sidebar-list" id="sidebar-list" role="list">
+                <div style="padding:20px 14px; color:var(--text-3); font-size:12px;">
+                    Loading lessons…
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Notes panel ───────────────────────────────────────────────── -->
+        <div class="sidebar-panel" id="panel-notes" role="tabpanel" style="display:none">
+            <div class="notes-compose">
+                <textarea id="note-input" class="note-input"
+                          placeholder="Write a note… (saves at current timestamp)"
+                          rows="3"></textarea>
+                <div class="notes-compose-footer">
+                    <span id="note-ts-label" class="note-ts-label"></span>
+                    <div style="display:flex;gap:6px;">
+                        <button class="note-export-btn" id="note-export-btn"
+                                onclick="player.exportNotes()"
+                                title="Download notes as Markdown">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Export
+                        </button>
+                        <button class="btn btn-primary note-save-btn"
+                                onclick="player.addNote()">Save Note</button>
+                    </div>
+                </div>
+            </div>
+            <div id="notes-list" class="notes-list"></div>
+        </div>
+
+        <!-- ── Bookmarks panel ───────────────────────────────────────────── -->
+        <div class="sidebar-panel" id="panel-bookmarks" role="tabpanel" style="display:none">
+            <div class="bm-add-row">
+                <button class="bm-add-btn" onclick="player.addBookmark()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Bookmark current time
+                    <span class="bm-key-hint">B</span>
+                </button>
+            </div>
+            <div id="bookmarks-list" class="bookmarks-list"></div>
+        </div>
+
+    </aside>
+
+</div><!-- player-shell -->
+
+<!-- Scripts -->
+<script src="/static/js/api.js"></script>
+<script src="/static/js/utils.js"></script>
+<script src="/static/js/player.js"></script>
+<script>
+    player.init({{ lesson_id }});
+</script>
+
+</body>
+</html>

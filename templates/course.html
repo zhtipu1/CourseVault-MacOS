@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Course — CourseVault{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hierarchy.css') }}"/>
+{% endblock %}
+
+{% block content %}
+<div id="course-root" data-course-id="{{ course_id }}">
+
+    <!-- ── Back ──────────────────────────────────────────────────────────── -->
+    <div style="padding:18px 28px 0;">
+        <a href="/library" class="back-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Back to Library
+        </a>
+    </div>
+
+    <!-- ── Hero ──────────────────────────────────────────────────────────── -->
+    <div id="course-hero" class="course-hero">
+        <img id="hero-thumb" class="hero-thumb" alt="" style="display:none;" aria-hidden="true"/>
+        <div class="hero-overlay"></div>
+
+        <!-- Cover upload button -->
+        <button class="hero-cover-btn" onclick="setCourseCover()" title="Set course cover image"
+                aria-label="Set course cover image">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+            </svg>
+        </button>
+
+        <div class="hero-content">
+            <h1 id="hero-title" class="hero-title">Loading…</h1>
+            <div class="hero-meta">
+                <span id="hero-lessons">—</span>
+                <span class="hero-dot">·</span>
+                <span id="hero-sections">—</span>
+                <span class="hero-dot">·</span>
+                <span id="hero-duration">—</span>
+            </div>
+            <div class="hero-progress-wrap">
+                <div class="hero-progress-track">
+                    <div id="hero-pct-bar" class="hero-progress-fill" style="width:0%"></div>
+                </div>
+                <span id="hero-pct" class="hero-pct-label">0%</span>
+                <span id="hero-completed" class="hero-completed-label">0 / 0 completed</span>
+            </div>
+            <!-- Tags -->
+            <div id="hero-tags" class="hero-tags"></div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <a id="hero-cta" href="#" class="btn btn-primary hero-cta">Start Course</a>
+                <a id="manage-link" href="#" class="hero-ghost-btn">Manage</a>
+                <button onclick="rescanThisCourse()" class="hero-ghost-btn">↺ Rescan</button>
+                <button onclick="resetCourseProgress()" class="hero-ghost-btn hero-danger-btn"
+                        title="Clear all progress for this course">✕ Reset Progress</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Description ───────────────────────────────────────────────────── -->
+    <div id="course-description-wrap" style="padding:0 28px;display:none;">
+        <div id="course-description" class="course-description" onclick="editDescription()"
+             title="Click to edit"></div>
+    </div>
+
+    <!-- ── Sections ──────────────────────────────────────────────────────── -->
+    <div style="padding:28px 28px 48px;">
+        <div class="content-toolbar">
+            <span class="content-toolbar-left">Course Content</span>
+            <div class="content-toolbar-right">
+                <button onclick="expandAll()"   class="course-action-btn">Expand all</button>
+                <button onclick="collapseAll()" class="course-action-btn">Collapse all</button>
+                <button onclick="manageTags()" class="course-action-btn" title="Edit course tags">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
+                        <line x1="7" y1="7" x2="7.01" y2="7"/>
+                    </svg>
+                    Tags
+                </button>
+                <a href="#" onclick="exportCourseNotes(event)" class="course-action-btn"
+                   title="Download all notes for this course">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Export Notes
+                </a>
+            </div>
+        </div>
+        <div id="sections-container">
+            <!-- Skeleton -->
+            <div class="cv-mod">
+                <div class="cv-mod-hd" style="cursor:default;">
+                    <div class="skel" style="width:200px;height:13px;border-radius:4px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Tag editor modal ──────────────────────────────────────────────── -->
+    <div id="tag-modal" class="cv-modal-backdrop" style="display:none;"
+         onclick="if(event.target===this)closeTagModal()">
+        <div class="cv-modal">
+            <div class="cv-modal-header">
+                <h3 class="cv-modal-title">Course Tags</h3>
+                <button class="cv-modal-close" onclick="closeTagModal()">✕</button>
+            </div>
+            <div class="cv-modal-body">
+                <div id="tag-pills" class="tag-pills-wrap"></div>
+                <div class="tag-input-row">
+                    <input type="text" id="tag-input" class="cv-input"
+                           placeholder="Add tag…" maxlength="32"
+                           onkeydown="if(event.key==='Enter')addTag()"/>
+                    <button class="btn btn-secondary" onclick="addTag()">Add</button>
+                </div>
+            </div>
+            <div class="cv-modal-footer">
+                <button class="btn btn-primary" onclick="saveTags()">Save Tags</button>
+                <button class="btn btn-ghost"   onclick="closeTagModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/course.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Manage Course — CourseVault{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hierarchy.css') }}"/>
+{% endblock %}
+
+{% block content %}
+<div id="manage-root" data-course-id="{{ course_id }}">
+
+    <div class="page-header" style="padding-bottom:0;">
+        <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;">
+            <div>
+                <a href="/course/{{ course_id }}" class="back-link">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                    Back to Course
+                </a>
+                <h1 class="page-title" style="margin-top:6px;">
+                    <span id="course-title-display">Loading…</span>
+                    <button class="manage-rename-btn" onclick="editCourseTitle()" title="Rename course">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                </h1>
+                <p class="page-subtitle">Organise structure, rename, reorder, or add lessons manually</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <label for="course-depth-select" style="font-size:12px;color:var(--text-2);white-space:nowrap;">Scan depth:</label>
+                    <select id="course-depth-select" class="cv-select cv-select-sm" onchange="saveCourseDepth(this.value)">
+                        <option value="0">Use global setting</option>
+                        <option value="1">1 level</option>
+                        <option value="2">2 levels</option>
+                        <option value="3">3 levels</option>
+                        <option value="4">4 levels</option>
+                        <option value="5">5 levels</option>
+                    </select>
+                </div>
+                <button class="btn btn-secondary" onclick="rescanCourse()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                    Rescan
+                </button>
+                <button class="btn btn-primary" onclick="addTopSection()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add section
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div style="padding:24px 28px 64px;" id="manage-body">
+        <div class="manage-hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Changes are saved immediately. Deleting removes entries from the database only. Video files on disk are never touched.
+        </div>
+        <div id="manage-tree">
+            <div style="color:var(--text-3);padding:32px 0;">Loading course structure…</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/manage.js') }}"></script>
+{% endblock %}

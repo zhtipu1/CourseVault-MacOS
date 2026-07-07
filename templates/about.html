@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}About — CourseVault{% endblock %}
+
+{% block content %}
+<div class="about-page">
+
+    <!-- Hero -->
+    <div class="about-hero">
+        <div class="about-logo-icon about-anim-float" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M15 10l4.55-2.63A1 1 0 0121 8.28v7.44a1 1 0 01-1.45.89L15 14"/>
+                <rect x="2" y="7" width="13" height="10" rx="2"/>
+            </svg>
+        </div>
+        <h1 class="about-app-name about-anim-up" style="--delay:.05s">Course<span>Vault</span></h1>
+        <p class="about-tagline about-anim-up" style="--delay:.1s">Offline Course Manager</p>
+        <div class="about-badges about-anim-up" style="--delay:.15s">
+            <span class="about-badge">v1.3.0</span>
+            <span class="about-badge">Python · Flask · pywebview · SQLite</span>
+        </div>
+    </div>
+
+    <!-- Cards row -->
+    <div class="about-cards">
+
+        <div class="about-card about-anim-up" style="--delay:.2s">
+            <p class="about-desc">
+                CourseVault is a fully offline desktop application for organizing and
+                watching your video courses. Import course folders or build courses
+                manually, track your progress — all stored locally. No accounts,
+                no cloud, no tracking.
+            </p>
+        </div>
+
+        <div class="about-card about-anim-up" style="--delay:.25s">
+            <h3 class="about-section-title">Features</h3>
+            <ul class="about-feature-list">
+                <li>Automatic folder scanning with multi-level module detection</li>
+                <li>Manual course builder for full control over structure</li>
+                <li>Progress tracking with resume playback</li>
+                <li>Timestamped notes and bookmarks, exportable to Markdown</li>
+                <li>Subtitle support (.srt / .vtt)</li>
+                <li>Wide format support — MKV, AVI, TS and more via FFmpeg</li>
+            </ul>
+        </div>
+
+        <div class="about-card about-anim-up" style="--delay:.3s; text-align:center;">
+            <h3 class="about-section-title">Developer</h3>
+            <p class="about-dev-name">Zahidul Haque Tipu</p>
+            <p class="about-dev-role">Design &amp; Development</p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

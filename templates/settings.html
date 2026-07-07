@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+{% block title %}Settings — CourseVault{% endblock %}
+
+{% block content %}
+<div class="page-header about-anim-up" style="--delay:0s">
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Configure folders, FFmpeg, player preferences, and more</p>
+</div>
+
+<div class="settings-body">
+
+    <!-- ── COURSE FOLDERS ─────────────────────────────────────────────────── -->
+    <section class="settings-section about-anim-up" style="--delay:.05s" aria-labelledby="s-folders">
+        <h2 class="settings-section-title" id="s-folders">Course Folders</h2>
+        <div class="settings-card">
+
+            <!-- Add new folder -->
+            <div class="settings-row" style="align-items:flex-start; padding-top:16px; padding-bottom:16px;">
+                <div class="settings-row-label">
+                    Add folder
+                    <div class="settings-row-hint">Paste or browse to the root folder of a single course</div>
+                </div>
+                <div class="settings-row-control" style="flex-direction:column; align-items:flex-start; gap:6px; flex:1;">
+                    <div style="display:flex; gap:8px; width:100%;">
+                        <input
+                            type="text"
+                            id="folder-input"
+                            class="cv-input"
+                            placeholder="Paste or browse to the course root folder"
+                            autocomplete="off"
+                            spellcheck="false"
+                        />
+                        <button id="browse-folder-btn" class="btn btn-secondary" style="white-space:nowrap;"
+                                onclick="browseFolderForSettings()">Browse…</button>
+                        <button id="add-folder-btn" class="btn btn-secondary" style="white-space:nowrap;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add
+                        </button>
+                    </div>
+                    <p style="font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.5;">
+                        Add each course root folder individually, not its parent directory.
+                    </p>
+                    <div id="folder-verify-indicator" style="min-height:18px;"></div>
+                </div>
+            </div>
+
+            <!-- Rescan -->
+            <div class="settings-row">
+                <div class="settings-row-label">
+                    Rescan folders
+                    <div class="settings-row-hint">Import new courses and lessons</div>
+                </div>
+                <div class="settings-row-control">
+                    <button id="rescan-btn" class="btn btn-secondary" onclick="triggerRescan()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+                        </svg>
+                        Rescan Now
+                    </button>
+                    <span id="rescan-status" style="font-size:12px; color:var(--text-3);"></span>
+                </div>
+            </div>
+
+            <!-- Fix durations -->
+            <div class="settings-row">
+                <div class="settings-row-label">
+                    Fix video durations
+                    <div class="settings-row-hint">Re-extract durations for lessons showing 0:00. Uses ffprobe from PATH or the FFmpeg path above.</div>
+                </div>
+                <div class="settings-row-control">
+                    <button id="fix-dur-btn" class="btn btn-secondary" onclick="fixDurations()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        Fix Durations
+                    </button>
+                    <span id="fix-dur-status" style="font-size:12px; color:var(--text-3);"></span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ── COURSE LIBRARY (collapsible) ───────────────────────────────────── -->
+    <section class="settings-section about-anim-up" style="--delay:.08s">
+        <div class="settings-collapsible-card">
+            <button class="settings-collapsible-toggle" id="library-toggle"
+                    onclick="toggleLibrary()" aria-expanded="false" aria-controls="library-body">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" style="color:var(--text-3); flex-shrink:0;" aria-hidden="true">
+                        <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+                    </svg>
+                    <span class="settings-collapsible-title">Course Library</span>
+                </div>
+                <div class="collapsible-toggle-right">
+                    <span id="folder-count-badge" class="folder-count-badge">0 folders</span>
+                    <svg class="collapsible-chevron" width="15" height="15" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </div>
+            </button>
+            <div class="settings-collapsible-body" id="library-body" aria-hidden="true">
+                <div class="settings-collapsible-inner">
+                    <div id="folder-list" class="folder-list-inner"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── FFMPEG ──────────────────────────────────────────────────────────── -->
+    <section class="settings-section about-anim-up" style="--delay:.12s" aria-labelledby="s-ffmpeg">
+        <h2 class="settings-section-title" id="s-ffmpeg">FFmpeg</h2>
+        <div class="settings-card">
+
+            <div class="settings-row" style="align-items:flex-start; padding-top:16px; padding-bottom:16px;">
+                <div class="settings-row-label">
+                    FFmpeg path
+                    <div class="settings-row-hint">
+                        Path to an existing ffmpeg.exe on your system
+                    </div>
+                </div>
+                <div class="settings-row-control" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                    <div style="display:flex; gap:8px; width:100%;">
+                        <input
+                            type="text"
+                            id="ffmpeg-path"
+                            class="cv-input"
+                            placeholder="Path to ffmpeg.exe, or just  ffmpeg  if it is on PATH"
+                            autocomplete="off"
+                            spellcheck="false"
+                        />
+                        <button id="ffmpeg-browse-btn" class="btn btn-secondary" style="white-space:nowrap;"
+                                onclick="browseFfmpegPath()">Browse…</button>
+                        <button id="ffmpeg-verify-btn" class="btn btn-secondary" style="white-space:nowrap;">
+                            Verify
+                        </button>
+                    </div>
+                    <span id="ffmpeg-status" class="ffmpeg-status" style="display:inline-block;">—</span>
+                    <p style="font-size:11.5px; color:var(--text-3); line-height:1.6;">
+                        Used only for MKV → MP4 remux. MP4 and WebM files bypass FFmpeg entirely.
+                        No re-encoding. Just a container swap, so conversion is very fast.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Download FFmpeg -->
+            <div class="settings-row" style="align-items:flex-start; padding-top:14px; padding-bottom:16px;">
+                <div class="settings-row-label">
+                    Download FFmpeg
+                    <div class="settings-row-hint">
+                        Auto-download the latest FFmpeg build<br/>
+                        from <span style="font-family:monospace">GyanD/codexffmpeg</span> on GitHub
+                    </div>
+                </div>
+                <div class="settings-row-control" style="flex-direction:column; align-items:flex-start; gap:8px; min-width:0; flex:1;">
+                    <button id="ffmpeg-dl-btn" class="btn btn-secondary" onclick="downloadFfmpeg()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Download FFmpeg
+                    </button>
+
+                    <div id="ffmpeg-dl-progress-wrap" style="display:none; width:100%; max-width:380px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                            <span id="ffmpeg-dl-status" style="font-size:12px; color:var(--text-2);">Downloading…</span>
+                            <span id="ffmpeg-dl-speed"  style="font-size:11.5px; color:var(--text-3);"></span>
+                        </div>
+                        <div class="ffmpeg-dl-track">
+                            <div id="ffmpeg-dl-fill" class="ffmpeg-dl-fill" style="width:0%"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                            <span id="ffmpeg-dl-bytes" style="font-size:11px; color:var(--text-3);"></span>
+                            <span id="ffmpeg-dl-pct"   style="font-size:11px; color:var(--text-3);"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- ── SCANNING ──────────────────────────────────────────────────────── -->
+    <section class="settings-section about-anim-up" style="--delay:.17s" aria-labelledby="s-scanning">
+        <h2 class="settings-section-title" id="s-scanning">Scanning</h2>
+        <div class="settings-card">
+            <div class="settings-row" style="align-items:flex-start;padding-top:16px;padding-bottom:16px;">
+                <div class="settings-row-label">
+                    Folder depth limit
+                    <div class="settings-row-hint">How many nested folder levels<br/>become sections in the course view</div>
+                </div>
+                <div class="settings-row-control" style="flex-direction:column;align-items:flex-start;gap:6px;">
+                    <select id="scan-max-depth" class="cv-select">
+                        <option value="0">Auto (recommended): scan all nesting levels</option>
+                        <option value="1">1 level: sections only, no subsections</option>
+                        <option value="2">2 levels: sections + one subsection level</option>
+                        <option value="3">3 levels</option>
+                        <option value="4">4 levels</option>
+                        <option value="5">5 levels</option>
+                    </select>
+                    <p style="font-size:11.5px;color:var(--text-3);line-height:1.6;">
+                        Applies globally unless overridden per-course in the Manage page.
+                        Takes effect on the next Rescan.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── PLAYER ──────────────────────────────────────────────────────────── -->
+    <section class="settings-section about-anim-up" style="--delay:.22s" aria-labelledby="s-player">
+        <h2 class="settings-section-title" id="s-player">Player</h2>
+        <div class="settings-card">
+
+            <div class="settings-row">
+                <div class="settings-row-label">Default volume</div>
+                <div class="settings-row-control">
+                    <input type="range" id="volume" class="cv-range" min="0" max="1" step="0.05" value="0.8"/>
+                    <span id="volume-display" class="range-display">0.8</span>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-row-label">
+                    Skip seconds
+                    <div class="settings-row-hint">← → arrow keys</div>
+                </div>
+                <div class="settings-row-control">
+                    <input type="number" id="skip-seconds" class="cv-input" min="1" max="120" value="10"/>
+                    <span style="font-size:13px; color:var(--text-3);">seconds</span>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-row-label">
+                    Mark complete at
+                    <div class="settings-row-hint">Lesson marked done when watched past this %</div>
+                </div>
+                <div class="settings-row-control">
+                    <input type="range" id="complete-threshold" class="cv-range" min="50" max="100" step="5" value="90"/>
+                    <span id="complete-threshold-display" class="range-display">90</span>
+                    <span style="font-size:13px; color:var(--text-3);">%</span>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-row-label">Auto-play next lesson</div>
+                <div class="settings-row-control">
+                    <label class="toggle-wrap" aria-label="Auto-play next lesson">
+                        <input type="checkbox" id="auto-play-next" checked/>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ── CACHE ───────────────────────────────────────────────────────────── -->
+    <section class="settings-section about-anim-up" style="--delay:.27s" aria-labelledby="s-cache">
+        <h2 class="settings-section-title" id="s-cache">Cache</h2>
+        <div class="settings-card">
+
+            <div class="settings-row">
+                <div class="settings-row-label">
+                    Cache location
+                    <div class="settings-row-hint">Where remuxed MP4 files are stored</div>
+                </div>
+                <div class="settings-row-control">
+                    <span style="font-size:12.5px; color:var(--text-2); font-family:monospace;">./cache/</span>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-row-label">
+                    Store conversions next to source
+                    <div class="settings-row-hint">
+                        Save converted MP4s beside the original video
+                        (<span style="font-family:monospace;">name.cv.mp4</span>)
+                        instead of the app cache. Keeps conversions with the course folder.
+                    </div>
+                </div>
+                <div class="settings-row-control">
+                    <label class="toggle-wrap" aria-label="Store conversions next to source file">
+                        <input type="checkbox" id="cache-beside-source"/>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-row-label">Cache size</div>
+                <div class="settings-row-control" style="gap:12px;">
+                    <span id="cache-size" style="font-size:13px; color:var(--text-2);">—</span>
+                    <button id="clear-cache-btn" class="btn btn-danger">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                        </svg>
+                        Clear Cache
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ── DEBUG ─────────────────────────────────────────────────────────────── -->
+    <section class="settings-section about-anim-up" style="--delay:.32s" aria-labelledby="s-debug">
+        <h2 class="settings-section-title" id="s-debug">Debug</h2>
+        <div class="settings-card">
+
+            <div class="settings-row">
+                <div class="settings-row-label">
+                    Debug mode
+                    <div class="settings-row-hint">
+                        Write detailed logs to the Debug folder on next app launch.
+                        Useful for diagnosing issues.
+                    </div>
+                </div>
+                <div class="settings-row-control">
+                    <label class="toggle-wrap" aria-label="Enable debug mode">
+                        <input type="checkbox" id="debug-mode"/>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-row-label">
+                    Log files
+                    <div class="settings-row-hint">One timestamped <code style="font-family:monospace">.log</code> file is created per launch when debug mode is on</div>
+                </div>
+                <div class="settings-row-control" style="gap:12px;">
+                    <span id="debug-folder-path" style="font-size:12px; color:var(--text-3); font-family:monospace;"></span>
+                    <button class="btn btn-secondary" onclick="openDebugFolder()" id="open-debug-btn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+                        </svg>
+                        Open Folder
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ── Save bar ──────────────────────────────────────────────────────────── -->
+    <div class="settings-save-bar">
+        <button id="save-btn" class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Save Settings
+        </button>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{% block title %}CourseVault{% endblock %}</title>
+
+    <!-- Google Fonts — DM Sans (cached after first load) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+
+    <!-- Tailwind CDN (cached by browser after first load) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { corePlugins: { preflight: false } }
+    </script>
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}"/>
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+<div class="app-layout">
+
+    <!-- ══ SIDEBAR ══════════════════════════════════════════════════════════ -->
+    <aside class="sidebar">
+
+        <!-- Logo -->
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M15 10l4.55-2.63A1 1 0 0121 8.28v7.44a1 1 0 01-1.45.89L15 14"/>
+                    <rect x="2" y="7" width="13" height="10" rx="2"/>
+                </svg>
+            </div>
+            <span class="sidebar-logo-text">Course<span>Vault</span></span>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="sidebar-nav" aria-label="Main navigation">
+
+            <a href="/library"
+               class="nav-item {% if active_page == 'library' %}active{% endif %}"
+               aria-current="{% if active_page == 'library' %}page{% endif %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <rect x="2" y="3" width="7" height="9" rx="1"/>
+                    <rect x="2" y="14" width="7" height="7" rx="1"/>
+                    <rect x="11" y="3" width="11" height="4" rx="1"/>
+                    <rect x="11" y="9" width="11" height="12" rx="1"/>
+                </svg>
+                Library
+            </a>
+
+            <a href="/library?filter=in-progress" class="nav-item" id="nav-continue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                Continue Watching
+            </a>
+
+            <a href="/library?filter=favorites" class="nav-item" id="nav-favorites">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                Favorites
+            </a>
+
+            <a href="#" class="nav-item" id="nav-search" onclick="openSearch(event)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                Search
+            </a>
+
+            <div style="flex:1;"></div>
+
+            <a href="/settings"
+               class="nav-item {% if active_page == 'settings' %}active{% endif %}"
+               aria-current="{% if active_page == 'settings' %}page{% endif %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                </svg>
+                Settings
+            </a>
+
+            <a href="/about"
+               class="nav-item {% if active_page == 'about' %}active{% endif %}"
+               aria-current="{% if active_page == 'about' %}page{% endif %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                About
+            </a>
+        </nav>
+
+        <!-- Currently Playing mini card -->
+        <div class="sidebar-now-playing" id="sidebar-now-playing">
+            <div class="now-playing-label">Now Playing</div>
+            <div class="now-playing-card empty" id="now-playing-card">
+                <span>Nothing playing</span>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- ══ MAIN CONTENT ══════════════════════════════════════════════════════ -->
+    <main class="main-content" id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+
+<!-- ── Search overlay ──────────────────────────────────────────────────────── -->
+<div id="search-overlay" class="search-overlay" style="display:none" role="dialog"
+     aria-modal="true" aria-label="Search">
+    <div class="search-modal" onclick="event.stopPropagation()">
+        <div class="search-input-row">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input id="search-input-global" type="text" class="search-input-field"
+                   placeholder="Search courses and lessons…"
+                   autocomplete="off" spellcheck="false"
+                   oninput="handleSearchInput(this.value)"
+                   onkeydown="handleSearchKey(event)"/>
+            <kbd class="search-esc-hint">Esc</kbd>
+        </div>
+        <div id="search-results" class="search-results">
+            <p class="search-hint-text">Type at least 2 characters to search</p>
+        </div>
+    </div>
+</div>
+
+<!-- Shared scripts (loaded on every page) -->
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+
+{% block scripts %}{% endblock %}
+
+<script>
+    // ── Now Playing restore ───────────────────────────────────────────────────
+    (function () {
+        const np = JSON.parse(sessionStorage.getItem("now-playing") || "null");
+        if (!np) return;
+        const card = document.getElementById("now-playing-card");
+        if (!card) return;
+        card.classList.remove("empty");
+        card.innerHTML = `
+            <a href="/player/${np.lessonId}" style="display:block;text-decoration:none;color:inherit;">
+                <div class="now-playing-title">${utils.escHtml(np.lessonTitle)}</div>
+                <div class="now-playing-course">${utils.escHtml(np.courseTitle)}</div>
+                <div class="now-playing-bar">
+                    <div class="now-playing-bar-fill" style="width:${np.percent || 0}%"></div>
+                </div>
+            </a>`;
+    })();
+
+    // ── Search overlay ────────────────────────────────────────────────────────
+    let _searchTimer = null;
+
+    function openSearch(e) {
+        if (e) e.preventDefault();
+        const overlay = document.getElementById("search-overlay");
+        overlay.style.display = "flex";
+        requestAnimationFrame(() => {
+            document.getElementById("search-input-global")?.focus();
+        });
+        overlay.onclick = (ev) => { if (ev.target === overlay) closeSearch(); };
+    }
+
+    function closeSearch() {
+        const overlay = document.getElementById("search-overlay");
+        overlay.style.display = "none";
+        const input = document.getElementById("search-input-global");
+        if (input) input.value = "";
+        document.getElementById("search-results").innerHTML =
+            `<p class="search-hint-text">Type at least 2 characters to search</p>`;
+    }
+
+    function handleSearchKey(e) {
+        if (e.key === "Escape") closeSearch();
+    }
+
+    function handleSearchInput(value) {
+        clearTimeout(_searchTimer);
+        const q = value.trim();
+        if (q.length < 2) {
+            document.getElementById("search-results").innerHTML =
+                `<p class="search-hint-text">Type at least 2 characters to search</p>`;
+            return;
+        }
+        _searchTimer = setTimeout(() => _doSearch(q), 220);
+    }
+
+    async function _doSearch(q) {
+        const resultsEl = document.getElementById("search-results");
+        resultsEl.innerHTML = `<p class="search-hint-text">Searching…</p>`;
+
+        const data = await api.get(`/api/search?q=${encodeURIComponent(q)}`);
+        if (!data || (data.courses.length === 0 && data.lessons.length === 0)) {
+            resultsEl.innerHTML = `<p class="search-hint-text">No results for "<strong>${utils.escHtml(q)}</strong>"</p>`;
+            return;
+        }
+
+        let html = "";
+
+        if (data.courses.length) {
+            html += `<div class="search-group-label">Courses</div>`;
+            html += data.courses.map(c => `
+                <a class="search-result-item" href="/course/${c.id}">
+                    <div class="sri-icon sri-course">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="7" height="9" rx="1"/>
+                            <rect x="11" y="3" width="11" height="4" rx="1"/>
+                            <rect x="11" y="9" width="11" height="12" rx="1"/>
+                        </svg>
+                    </div>
+                    <div class="sri-body">
+                        <span class="sri-title">${utils.escHtml(c.title)}</span>
+                        <span class="sri-meta">${c.total_lessons} lectures</span>
+                    </div>
+                </a>`).join("");
+        }
+
+        if (data.lessons.length) {
+            html += `<div class="search-group-label">Lessons</div>`;
+            html += data.lessons.map(l => `
+                <a class="search-result-item" href="/player/${l.id}">
+                    <div class="sri-icon sri-lesson">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                    </div>
+                    <div class="sri-body">
+                        <span class="sri-title">${utils.escHtml(l.title)}</span>
+                        <span class="sri-meta">${utils.escHtml(l.course_title)}
+                            ${l.duration_secs ? ' · ' + utils.formatTime(l.duration_secs) : ''}
+                        </span>
+                    </div>
+                </a>`).join("");
+        }
+
+        resultsEl.innerHTML = html;
+    }
+
+    // Close search on Escape globally
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            const overlay = document.getElementById("search-overlay");
+            if (overlay && overlay.style.display !== "none") { closeSearch(); return; }
+        }
+        // Open search on Ctrl+K or Cmd+K
+        if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+            e.preventDefault();
+            openSearch();
+        }
+    });
+
+    // ── Library filter from URL ───────────────────────────────────────────────
+    // Allow /library?filter=favorites to pre-select the tab
+    (function () {
+        if (!window.location.pathname.startsWith("/library")) return;
+        const param = new URLSearchParams(window.location.search).get("filter");
+        if (!param) return;
+        // library.js reads this on DOMContentLoaded
+        window._libraryInitialFilter = param;
+    })();
+</script>
+
+</body>
+</html>
