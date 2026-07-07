@@ -1,0 +1,44 @@
+# .github/workflows/build.yml
+#
+# Builds CourseVault for macOS.
+# Trigger: Actions → Build CourseVault (macOS) → Run workflow
+
+name: Build CourseVault (macOS)
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build-macos:
+    name: macOS (app bundle)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install flask watchdog pywebview pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller coursevault.spec
+
+      # Zip the .app so it uploads as a single file (preserves Unix permissions)
+      - name: Zip .app bundle
+        run: |
+          cd dist
+          zip -r CourseVault-macOS.zip CourseVault.app
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CourseVault-macOS
+          path: dist/CourseVault-macOS.zip
+          retention-days: 7
