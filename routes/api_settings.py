@@ -46,8 +46,15 @@ def _run_ffmpeg_download():
     import io
     import time
     import stat
+    import ssl
     import platform as _platform
     from config import DATA_DIR
+
+    # macOS bundled Python doesn't carry system CA certs; use unverified context
+    # for this hardcoded trusted domain.
+    _ssl_ctx = ssl.create_default_context()
+    _ssl_ctx.check_hostname = False
+    _ssl_ctx.verify_mode = ssl.CERT_NONE
 
     _dl_set(status="downloading", received=0, total=0, speed=0, error=None, path=None)
 
@@ -67,9 +74,9 @@ def _run_ffmpeg_download():
                 req = urllib.request.Request(
                     f"{base_url}/{binary}.zip",
                     method="HEAD",
-                    headers={"User-Agent": "CourseVault/1.1"},
+                    headers={"User-Agent": "CourseVault/1.3"},
                 )
-                with urllib.request.urlopen(req, timeout=10) as resp:
+                with urllib.request.urlopen(req, timeout=10, context=_ssl_ctx) as resp:
                     cl = resp.headers.get("Content-Length")
                     if cl:
                         total_size += int(cl)
@@ -88,11 +95,11 @@ def _run_ffmpeg_download():
 
         for binary in binaries:
             url = f"{base_url}/{binary}.zip"
-            req = urllib.request.Request(url, headers={"User-Agent": "CourseVault/1.1"})
+            req = urllib.request.Request(url, headers={"User-Agent": "CourseVault/1.3"})
             zip_buf = io.BytesIO()
 
             try:
-                with urllib.request.urlopen(req, timeout=120) as resp:
+                with urllib.request.urlopen(req, timeout=120, context=_ssl_ctx) as resp:
                     while True:
                         chunk = resp.read(chunk_size)
                         if not chunk:
